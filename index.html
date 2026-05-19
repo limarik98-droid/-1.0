@@ -769,6 +769,8 @@
 3. Категорию каждой вещи берй ТОЧНО из гардероба — не меняй её
 4. ${weatherInfo} Подбирай вещи подходящие по погоде
 5. Создай РОВНО 3 разных варианта, в каждом 3-4 вещи
+6. В одном образе НЕ МОЖЕТ быть две вещи одной категории — например нельзя два "Верх" или два "Низ" в одном образе
+7. Каждый образ должен содержать логичный комплект: обязательно одна вещь категории "Верх" и одна "Низ" (или "Платья"), плюс "Обувь" если есть в гардеробе
 
 ГАРДЕРОБ:
 ${wardrobeDesc}
@@ -813,6 +815,17 @@ ${wardrobeDesc}
 
       const parsed = JSON.parse(clean);
       if (!parsed.outfits || !Array.isArray(parsed.outfits)) throw new Error('Неверная структура ответа. Попробуйте снова.');
+
+      // Remove duplicate categories within each outfit
+      parsed.outfits = parsed.outfits.map(outfit => {
+        const seenCategories = new Set();
+        outfit.items = outfit.items.filter(item => {
+          if (seenCategories.has(item.category)) return false;
+          seenCategories.add(item.category);
+          return true;
+        });
+        return outfit;
+      });
 
       loading.classList.add('hidden');
       incrementUsed();
