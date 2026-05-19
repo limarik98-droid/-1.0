@@ -235,6 +235,57 @@
 
   #results { margin-bottom: 40px; }
   .hidden { display: none; }
+
+  .limit-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 12px 20px;
+    margin-bottom: 32px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .limit-dots { display: flex; gap: 6px; }
+  .limit-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--warm);
+    transition: background 0.2s;
+  }
+  .limit-dot.used { background: var(--border); }
+  .limit-text { letter-spacing: 0.05em; }
+
+  .paywall {
+    text-align: center;
+    padding: 48px 32px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+  .paywall-icon { font-size: 36px; margin-bottom: 16px; }
+  .paywall h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px; font-weight: 300;
+    margin-bottom: 10px; color: var(--ink);
+  }
+  .paywall p { font-size: 12px; color: var(--muted); line-height: 1.7; margin-bottom: 28px; }
+  .paywall-btn {
+    display: inline-block;
+    padding: 14px 40px;
+    background: var(--ink); color: var(--cream);
+    border: none; font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: 0.1em;
+    text-transform: uppercase; cursor: pointer;
+    transition: background 0.2s;
+  }
+  .paywall-btn:hover { background: var(--accent); }
+  .paywall-reset {
+    display: block; margin-top: 14px;
+    font-size: 10px; color: var(--muted);
+    cursor: pointer; letter-spacing: 0.05em;
+  }
+  .paywall-reset:hover { color: var(--ink); }
 </style>
 </head>
 <body>
@@ -279,7 +330,24 @@
     <div id="emptyWardrobe" class="empty-wardrobe">Пока здесь пусто — добавь свои вещи выше</div>
   </div>
 
-  <!-- Query -->
+  <!-- Limit bar -->
+  <div class="limit-bar" id="limitBar">
+    <span class="limit-text">Подборов сегодня</span>
+    <div class="limit-dots">
+      <div class="limit-dot" id="dot0"></div>
+      <div class="limit-dot" id="dot1"></div>
+      <div class="limit-dot" id="dot2"></div>
+    </div>
+  </div>
+
+  <!-- Paywall -->
+  <div id="paywall" class="paywall hidden">
+    <div class="paywall-icon">✨</div>
+    <h2>Лимит на сегодня исчерпан</h2>
+    <p>Ты использовал все 3 бесплатных подбора на сегодня.<br>Оформи подписку — безлимитные подборы каждый день.</p>
+    <button class="paywall-btn" onclick="alert('Оплата пока недоступна — это прототип!')">Оформить подписку · $5/мес</button>
+    <span class="paywall-reset" onclick="resetLimit()">Сбросить лимит (только для теста)</span>
+  </div>
   <div class="query-section">
     <div class="section-label">Для какого случая</div>
     <div class="chips" id="chips"></div>
@@ -303,6 +371,42 @@
 
 <script>
   const CHIPS = ["вечер в ресторане","деловая встреча","прогулка в городе","свидание","выходной день","вечеринка"];
+  const DAILY_LIMIT = 3;
+
+  // Limit logic
+  function getTodayKey() {
+    return 'limit_' + new Date().toISOString().slice(0, 10);
+  }
+  function getUsedCount() {
+    try { return parseInt(localStorage.getItem(getTodayKey()) || '0'); } catch(e) { return 0; }
+  }
+  function incrementUsed() {
+    try { localStorage.setItem(getTodayKey(), getUsedCount() + 1); } catch(e) {}
+  }
+  function resetLimit() {
+    try { localStorage.removeItem(getTodayKey()); } catch(e) {}
+    updateLimitUI();
+  }
+  function updateLimitUI() {
+    const used = getUsedCount();
+    const remaining = DAILY_LIMIT - used;
+    for (let i = 0; i < DAILY_LIMIT; i++) {
+      document.getElementById('dot' + i).classList.toggle('used', i >= remaining);
+    }
+    const paywall = document.getElementById('paywall');
+    const querySection = document.querySelector('.query-section');
+    if (remaining <= 0) {
+      paywall.classList.remove('hidden');
+      querySection.style.opacity = '0.4';
+      querySection.style.pointerEvents = 'none';
+    } else {
+      paywall.classList.add('hidden');
+      querySection.style.opacity = '1';
+      querySection.style.pointerEvents = '';
+    }
+    document.querySelector('.limit-text').textContent =
+      remaining > 0 ? `Осталось подборов: ${remaining} из ${DAILY_LIMIT}` : 'Лимит исчерпан';
+  }
   // Load wardrobe from localStorage
   let wardrobe = [];
   try {
@@ -453,6 +557,8 @@ ${wardrobeDesc}
       const parsed = JSON.parse(clean);
 
       loading.classList.add('hidden');
+      incrementUsed();
+      updateLimitUI();
       renderOutfits(parsed.outfits);
     } catch (err) {
       loading.classList.add('hidden');
@@ -498,6 +604,7 @@ ${wardrobeDesc}
 
   // Init
   renderWardrobe();
+  updateLimitUI();
 </script>
 </body>
 </html>
