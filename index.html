@@ -288,7 +288,7 @@
   .loading-text { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-style: italic; color: var(--muted); }
 
   /* OUTFITS */
-  .outfit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 24px; }
+  .outfit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
   .outfit-card {
     background: var(--card); border: 1px solid var(--border); overflow: hidden;
     animation: fadeUp 0.4s ease both;
@@ -305,12 +305,112 @@
   }
   .outfit-variant { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--warm); }
   .outfit-mood { font-family: 'Cormorant Garamond', serif; font-size: 13px; font-style: italic; color: var(--muted); }
-  .outfit-items { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-  .outfit-item { display: flex; align-items: center; gap: 12px; }
-  .item-thumb { width: 48px; height: 56px; object-fit: cover; background: var(--warm-light); flex-shrink: 0; }
+
+  /* MANNEQUIN COLLAGE */
+  .mannequin-wrap {
+    padding: 20px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  .mannequin {
+    width: 110px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .mannequin-body {
+    width: 110px;
+    height: 260px;
+    position: relative;
+  }
+  /* Head */
+  .mannequin-head {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--warm-light);
+    border: 1.5px solid var(--border);
+    margin: 0 auto 4px;
+  }
+  /* Neck */
+  .mannequin-neck {
+    width: 10px; height: 10px;
+    background: var(--warm-light);
+    margin: 0 auto;
+  }
+  /* Torso slot */
+  .mannequin-top {
+    width: 80px; height: 80px;
+    margin: 2px auto 0;
+    border: 1.5px dashed var(--border);
+    background: var(--warm-light);
+    overflow: hidden;
+    position: relative;
+  }
+  /* Outer layer slot */
+  .mannequin-outer {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    width: 80px; height: 80px;
+    border: 1.5px dashed var(--warm);
+    background: transparent;
+    overflow: hidden;
+    opacity: 0.85;
+  }
+  /* Bottom slot */
+  .mannequin-bottom {
+    width: 70px; height: 80px;
+    margin: 2px auto 0;
+    border: 1.5px dashed var(--border);
+    background: var(--warm-light);
+    overflow: hidden;
+  }
+  /* Shoes slot */
+  .mannequin-shoes {
+    width: 60px; height: 40px;
+    margin: 2px auto 0;
+    border: 1.5px dashed var(--border);
+    background: var(--warm-light);
+    overflow: hidden;
+  }
+  .mannequin-top img,
+  .mannequin-outer img,
+  .mannequin-bottom img,
+  .mannequin-shoes img {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .mannequin-slot-label {
+    font-size: 7px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); text-align: center; margin-top: 2px;
+  }
+  /* Accessories row */
+  .mannequin-accessories {
+    display: flex; gap: 4px; justify-content: center; margin-top: 4px; flex-wrap: wrap;
+  }
+  .mannequin-acc {
+    width: 28px; height: 28px;
+    border: 1.5px dashed var(--border);
+    background: var(--warm-light);
+    overflow: hidden;
+  }
+  .mannequin-acc img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* Item list on right */
+  .outfit-items-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 4px;
+  }
+  .outfit-item { display: flex; align-items: center; gap: 8px; }
+  .item-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--warm); flex-shrink: 0;
+  }
   .item-info { flex: 1; }
-  .item-cat { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--warm); margin-bottom: 2px; }
-  .item-name { font-family: 'Cormorant Garamond', serif; font-size: 16px; color: var(--ink); line-height: 1.2; }
+  .item-cat { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--warm); margin-bottom: 1px; }
+  .item-name { font-family: 'Cormorant Garamond', serif; font-size: 14px; color: var(--ink); line-height: 1.2; }
+
   .outfit-note {
     padding: 14px 20px; border-top: 1px solid var(--border);
     font-family: 'Cormorant Garamond', serif; font-size: 15px;
@@ -326,6 +426,7 @@
   }
   .btn-save:hover { background: var(--ink); color: var(--cream); }
   .btn-save.saved { background: var(--accent); color: white; border-color: var(--accent); }
+  .item-thumb { width: 48px; height: 56px; object-fit: cover; background: var(--warm-light); flex-shrink: 0; }
 
   #results { margin-bottom: 40px; }
   .hidden { display: none; }
@@ -884,24 +985,59 @@ ${wardrobeDesc}
   function renderOutfits(outfits) {
     const grid = document.getElementById('outfitGrid');
     grid.innerHTML = outfits.map((outfit, i) => {
-      const items = outfit.items.map(item => {
-        const imgUrl = item.imageUrl || wardrobe[item.wardrobeIndex]?.url;
-        const thumb = imgUrl ? `<img class="item-thumb" src="${imgUrl}" alt="${item.name}">` : '';
-        return `<div class="outfit-item">
-          ${thumb}
+
+      // Sort items into slots
+      const slots = { top: null, outer: null, bottom: null, shoes: null, accessories: [] };
+      outfit.items.forEach(item => {
+        const cat = (item.category || '').toLowerCase();
+        if (cat === 'верх') slots.top = item;
+        else if (cat === 'верхняя одежда') slots.outer = item;
+        else if (cat === 'низ' || cat === 'платья') slots.bottom = item;
+        else if (cat === 'обувь') slots.shoes = item;
+        else slots.accessories.push(item);
+      });
+
+      const slotImg = (item, cls) => item?.imageUrl
+        ? `<div class="${cls}"><img src="${item.imageUrl}" alt="${item.name}"></div>`
+        : `<div class="${cls}"></div>`;
+
+      const mannequin = `
+        <div class="mannequin">
+          <div class="mannequin-head"></div>
+          <div class="mannequin-neck"></div>
+          <div style="position:relative;width:80px;margin:2px auto 0">
+            ${slotImg(slots.top, 'mannequin-top')}
+            ${slots.outer ? `<div class="mannequin-outer">${slots.outer.imageUrl ? `<img src="${slots.outer.imageUrl}" alt="${slots.outer.name}">` : ''}</div>` : ''}
+          </div>
+          <div class="mannequin-slot-label">верх</div>
+          ${slotImg(slots.bottom, 'mannequin-bottom')}
+          <div class="mannequin-slot-label">низ</div>
+          ${slotImg(slots.shoes, 'mannequin-shoes')}
+          <div class="mannequin-slot-label">обувь</div>
+          ${slots.accessories.length ? `
+            <div class="mannequin-accessories">
+              ${slots.accessories.map(a => `<div class="mannequin-acc">${a.imageUrl ? `<img src="${a.imageUrl}" alt="${a.name}">` : ''}</div>`).join('')}
+            </div>` : ''}
+        </div>`;
+
+      const itemsList = outfit.items.map(item => `
+        <div class="outfit-item">
+          <div class="item-dot"></div>
           <div class="item-info">
             <div class="item-cat">${item.category}</div>
             <div class="item-name">${item.name}</div>
           </div>
-        </div>`;
-      }).join('');
+        </div>`).join('');
 
       return `<div class="outfit-card">
         <div class="outfit-header">
           <span class="outfit-variant">${outfit.variant}</span>
           <span class="outfit-mood">${outfit.mood}</span>
         </div>
-        <div class="outfit-items">${items}</div>
+        <div class="mannequin-wrap">
+          ${mannequin}
+          <div class="outfit-items-list">${itemsList}</div>
+        </div>
         ${outfit.note ? `<div class="outfit-note">"${outfit.note}"</div>` : ''}
         <div class="outfit-footer">
           <button class="btn-save" onclick="toggleSave(this)">Сохранить образ</button>
