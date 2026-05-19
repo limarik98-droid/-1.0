@@ -174,6 +174,37 @@
 
   /* WARDROBE */
   .wardrobe-section { margin-bottom: 40px; }
+
+  .category-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .cat-filter {
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; color: var(--muted);
+    cursor: pointer; transition: all 0.15s;
+    letter-spacing: 0.05em;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .cat-filter:hover, .cat-filter.active {
+    background: var(--ink); color: var(--cream); border-color: var(--ink);
+  }
+  .cat-filter .cat-count {
+    background: rgba(255,255,255,0.15);
+    padding: 1px 5px;
+    font-size: 9px;
+    border-radius: 2px;
+  }
+  .cat-filter:not(.active) .cat-count {
+    background: var(--warm-light);
+    color: var(--muted);
+  }
+
   .wardrobe-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
   .wardrobe-item {
     aspect-ratio: 3/4;
@@ -182,6 +213,20 @@
     background: var(--warm-light);
   }
   .wardrobe-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .wardrobe-item .item-cat-badge {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(26,22,18,0.65);
+    color: white; font-size: 9px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 4px 6px; text-align: center;
+  }
+  .wardrobe-item .analyzing-badge {
+    position: absolute; inset: 0;
+    background: rgba(26,22,18,0.5);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 10px;
+    letter-spacing: 0.05em;
+  }
   .wardrobe-item .remove-btn {
     position: absolute; top: 4px; right: 4px;
     background: rgba(26,22,18,0.75); color: white;
@@ -395,6 +440,7 @@
   <!-- Wardrobe -->
   <div class="wardrobe-section">
     <div class="section-label" id="wardrobeLabel">0 вещей в гардеробе</div>
+    <div class="category-filters" id="categoryFilters"></div>
     <div id="wardrobeGrid" class="wardrobe-grid"></div>
     <div id="emptyWardrobe" class="empty-wardrobe">Пока здесь пусто — добавь свои вещи выше</div>
   </div>
@@ -515,17 +561,77 @@
   uploadZone.ondrop = e => { e.preventDefault(); uploadZone.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); };
   fileInput.onchange = e => handleFiles(e.target.files);
 
+  const GEMINI_KEY = 'AIzaSyCDxnQ3lwotdHvlLlf5-dagJs8nfmrXw8M';
+  const CATEGORIES = ['Все', 'Верх', 'Низ', 'Обувь', 'Верхняя одежда', 'Платья', 'Аксессуары', 'Сумки', 'Головные уборы'];
+  let activeFilter = 'Все';
+
+  async function detectCategory(base64url) {
+    try {
+      const base64 = base64url.split(',')[1];
+      const mime = base64url.split(';')[0].split(':')[1];
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { inline_data: { mime_type: mime, data: base64 } },
+                { text: `Определи категорию одежды или аксессуара на фото. Отвечай ТОЛЬКО одним словом из списка: Верх, Низ, Обувь, Верхняя одежда, Платья, Аксессуары, Сумки, Головные уборы. Ничего больше.` }
+              ]
+            }]
+          })
+        }
+      );
+      const data = await res.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+      return CATEGORIES.includes(text) ? text : 'Аксессуары';
+    } catch(e) { return 'Аксессуары'; }
+  }
+
   function handleFiles(files) {
     Array.from(files).filter(f => f.type.startsWith('image/')).forEach(file => {
       const reader = new FileReader();
-      reader.onload = e => {
-        wardrobe.push({ id: Date.now() + Math.random(), url: e.target.result, name: file.name.replace(/\.[^.]+$/, '') });
-        saveWardrobe();
+      reader.onload = async e => {
+        const id = Date.now() + Math.random();
+        const item = { id, url: e.target.result, name: file.name.replace(/\.[^.]+$/, ''), category: null };
+        wardrobe.push(item);
         renderWardrobe();
         updateBtn();
+        // Detect category via Gemini
+        const cat = await detectCategory(e.target.result);
+        const idx = wardrobe.findIndex(i => i.id === id);
+        if (idx !== -1) {
+          wardrobe[idx].category = cat;
+          saveWardrobe();
+          renderWardrobe();
+        }
       };
       reader.readAsDataURL(file);
     });
+  }
+
+  function renderCategoryFilters() {
+    const el = document.getElementById('categoryFilters');
+    if (wardrobe.length === 0) { el.innerHTML = ''; return; }
+    const counts = {};
+    wardrobe.forEach(i => {
+      const c = i.category || '…';
+      counts[c] = (counts[c] || 0) + 1;
+    });
+    el.innerHTML = CATEGORIES.map(cat => {
+      const count = cat === 'Все' ? wardrobe.length : (counts[cat] || 0);
+      if (cat !== 'Все' && count === 0) return '';
+      return `<button class="cat-filter ${activeFilter === cat ? 'active' : ''}" onclick="setFilter('${cat}')">
+        ${cat} <span class="cat-count">${count}</span>
+      </button>`;
+    }).join('');
+  }
+
+  function setFilter(cat) {
+    activeFilter = cat;
+    renderWardrobe();
   }
 
   function renderWardrobe() {
@@ -533,15 +639,24 @@
     const empty = document.getElementById('emptyWardrobe');
     const label = document.getElementById('wardrobeLabel');
     label.childNodes[0].textContent = wardrobe.length + ' вещей в гардеробе';
+    renderCategoryFilters();
     if (wardrobe.length === 0) {
       grid.innerHTML = '';
       empty.style.display = 'block';
       return;
     }
     empty.style.display = 'none';
-    grid.innerHTML = wardrobe.map(item => `
+    const filtered = activeFilter === 'Все' ? wardrobe : wardrobe.filter(i => i.category === activeFilter);
+    if (filtered.length === 0) {
+      grid.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:20px;font-style:italic">В этой категории пока нет вещей</div>`;
+      return;
+    }
+    grid.innerHTML = filtered.map(item => `
       <div class="wardrobe-item" data-id="${item.id}">
         <img src="${item.url}" alt="${item.name}">
+        ${item.category
+          ? `<div class="item-cat-badge">${item.category}</div>`
+          : `<div class="analyzing-badge">анализ…</div>`}
         <button class="remove-btn" onclick="removeItem('${item.id}')">✕</button>
       </div>
     `).join('');
@@ -573,8 +688,6 @@
   async function generateOutfits() {
     const query = document.getElementById('queryInput').value.trim();
     if (!query || wardrobe.length === 0) return;
-
-    const GEMINI_KEY = 'AIzaSyCDxnQ3lwotdHvlLlf5-dagJs8nfmrXw8M';
 
     const results = document.getElementById('results');
     const loading = document.getElementById('loadingState');
