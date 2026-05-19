@@ -739,12 +739,9 @@
     loading.classList.remove('hidden');
     grid.innerHTML = '';
 
-    const wardrobeDesc = wardrobe.map((item, i) =>
-      `Вещь ${i+1} (индекс ${i}): "${item.name}", категория: "${item.category || 'Без категории'}"`
-    ).join('\n');
-
     // Get weather
     let weatherInfo = '';
+    let temperature = null;
     try {
       const pos = await new Promise((res, rej) =>
         navigator.geolocation.getCurrentPosition(res, rej, { timeout: 3000 })
@@ -753,13 +750,55 @@
         `https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current=temperature_2m,weathercode&wind_speed_unit=ms`
       );
       const wData = await wRes.json();
-      const temp = Math.round(wData.current.temperature_2m);
+      temperature = Math.round(wData.current.temperature_2m);
       const code = wData.current.weathercode;
       const condition = code <= 1 ? 'ясно' : code <= 3 ? 'облачно' : code <= 67 ? 'дождь' : code <= 77 ? 'снег' : 'пасмурно';
-      weatherInfo = `Текущая погода: ${temp}°C, ${condition}.`;
+      weatherInfo = `Текущая погода: ${temperature}°C, ${condition}.`;
     } catch(e) {
       weatherInfo = 'Погода недоступна — подбирай образ по сезону.';
     }
+
+    // Filter wardrobe by temperature
+    function isWeatherAppropriate(item, temp) {
+      if (temp === null) return true;
+      const name = (item.name + ' ' + (item.category || '')).toLowerCase();
+      const isWarm = name.includes('пуховик') || name.includes('шуб') || name.includes('дублён') ||
+                     name.includes('зимн') || name.includes('термо') || name.includes('флис') ||
+                     item.category === 'Верхняя одежда';
+      const isCool = name.includes('свитер') || name.includes('худи') || name.includes('джемпер') ||
+                     name.includes('кардиган') || name.includes('лонгслив');
+      const isLight = name.includes('майк') || name.includes('шорт') || name.includes('сарафан') ||
+                      name.includes('купальник') || name.includes('топ');
+
+      if (temp >= 25) {
+        // Жара — без зимней верхней одежды
+        if (isWarm && item.category === 'Верхняя одежда') return false;
+      }
+      if (temp >= 20) {
+        // Тепло — без тяжёлых свитеров и пуховиков
+        if (isWarm && item.category === 'Верхняя одежда') return false;
+      }
+      if (temp <= 10) {
+        // Холодно — без лёгких летних вещей
+        if (isLight) return false;
+      }
+      if (temp <= 0) {
+        // Мороз — только зимние вещи
+        if (!isWarm && !isCool && item.category !== 'Аксессуары' && item.category !== 'Обувь') return false;
+      }
+      return true;
+    }
+
+    const filteredWardrobe = temperature !== null
+      ? wardrobe.filter(item => isWeatherAppropriate(item, temperature))
+      : wardrobe;
+
+    // Fallback to full wardrobe if filter removed too many items
+    const wardrobeToUse = filteredWardrobe.length >= 3 ? filteredWardrobe : wardrobe;
+
+    const wardrobeDesc = wardrobeToUse.map((item, i) =>
+      `Вещь ${i+1} (индекс ${i}): "${item.name}", категория: "${item.category || 'Без категории'}"`
+    ).join('\n');
 
     const prompt = `Ты — профессиональный стилист. Подбери образы СТРОГО из гардероба ниже.
 
@@ -816,14 +855,17 @@ ${wardrobeDesc}
       const parsed = JSON.parse(clean);
       if (!parsed.outfits || !Array.isArray(parsed.outfits)) throw new Error('Неверная структура ответа. Попробуйте снова.');
 
-      // Remove duplicate categories within each outfit
+      // Map wardrobeIndex back to original wardrobe items for images
       parsed.outfits = parsed.outfits.map(outfit => {
         const seenCategories = new Set();
         outfit.items = outfit.items.filter(item => {
           if (seenCategories.has(item.category)) return false;
           seenCategories.add(item.category);
           return true;
-        });
+        }).map(item => ({
+          ...item,
+          imageUrl: (wardrobeToUse[item.wardrobeIndex] || wardrobeToUse[0])?.url || null
+        }));
         return outfit;
       });
 
@@ -843,8 +885,8 @@ ${wardrobeDesc}
     const grid = document.getElementById('outfitGrid');
     grid.innerHTML = outfits.map((outfit, i) => {
       const items = outfit.items.map(item => {
-        const wardrobeItem = wardrobe[item.wardrobeIndex];
-        const thumb = wardrobeItem ? `<img class="item-thumb" src="${wardrobeItem.url}" alt="${item.name}">` : '';
+        const imgUrl = item.imageUrl || wardrobe[item.wardrobeIndex]?.url;
+        const thumb = imgUrl ? `<img class="item-thumb" src="${imgUrl}" alt="${item.name}">` : '';
         return `<div class="outfit-item">
           ${thumb}
           <div class="item-info">
