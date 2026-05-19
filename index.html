@@ -725,7 +725,7 @@
   document.getElementById('generateBtn').onclick = generateOutfits;
   document.getElementById('queryInput').onkeydown = e => { if (e.key === 'Enter') generateOutfits(); };
 
-  const OPENROUTER_KEY = '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';
+  const COHERE_KEY = 'cohere_Bezh5jbK2HGu6t4NpRQq668B8ZwG8hAJ0bLkJlcm4HmMmR';
 
   async function generateOutfits() {
     const query = document.getElementById('queryInput').value.trim();
@@ -768,22 +768,22 @@ ${wardrobeDesc}
 Категории: Верх, Низ, Обувь, Верхняя одежда, Аксессуар, Платье/комбинезон`;
 
     try {
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const response = await fetch('https://api.cohere.com/v1/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENROUTER_KEY}`,
+          'Authorization': `Bearer ${COHERE_KEY}`,
         },
         body: JSON.stringify({
-          model: 'meta-llama/llama-3.3-8b-instruct:free',
-          messages: [{ role: 'user', content: prompt }]
+          model: 'command-r-plus',
+          message: prompt,
         })
       });
 
       const data = await response.json();
-      if (data.error) throw new Error(data.error.message);
+      if (data.message) throw new Error(data.message);
 
-      const text = data.choices[0].message.content;
+      const text = data.text;
       const clean = text.replace(/```json|```/g, '').trim();
       const parsed = JSON.parse(clean);
 
