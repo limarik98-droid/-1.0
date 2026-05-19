@@ -213,20 +213,18 @@
     background: var(--warm-light);
   }
   .wardrobe-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .wardrobe-item .item-cat-badge {
+  .wardrobe-item .item-cat-select {
     position: absolute; bottom: 0; left: 0; right: 0;
-    background: rgba(26,22,18,0.65);
+    background: rgba(26,22,18,0.75);
     color: white; font-size: 9px;
-    letter-spacing: 0.08em; text-transform: uppercase;
-    padding: 4px 6px; text-align: center;
-  }
-  .wardrobe-item .analyzing-badge {
-    position: absolute; inset: 0;
-    background: rgba(26,22,18,0.5);
-    display: flex; align-items: center; justify-content: center;
-    color: white; font-size: 10px;
     letter-spacing: 0.05em;
+    border: none; outline: none;
+    padding: 5px 6px;
+    font-family: 'DM Mono', monospace;
+    cursor: pointer; width: 100%;
+    appearance: none; text-align: center;
   }
+  .wardrobe-item .item-cat-select option { background: var(--ink); color: white; }
   .wardrobe-item .remove-btn {
     position: absolute; top: 4px; right: 4px;
     background: rgba(26,22,18,0.75); color: white;
@@ -633,20 +631,12 @@
       const reader = new FileReader();
       reader.onload = async e => {
         const id = Date.now() + Math.random();
-        // Compress for display and storage
         const compressed = await compressImage(e.target.result);
-        const item = { id, url: compressed, name: file.name.replace(/\.[^.]+$/, ''), category: null };
+        const item = { id, url: compressed, name: file.name.replace(/\.[^.]+$/, ''), category: 'Без категории' };
         wardrobe.push(item);
+        saveWardrobe();
         renderWardrobe();
         updateBtn();
-        // Detect category via Gemini (use compressed image)
-        const cat = await detectCategory(compressed);
-        const idx = wardrobe.findIndex(i => i.id === id);
-        if (idx !== -1) {
-          wardrobe[idx].category = cat;
-          saveWardrobe();
-          renderWardrobe();
-        }
       };
       reader.readAsDataURL(file);
     });
@@ -691,15 +681,25 @@
       grid.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:20px;font-style:italic">В этой категории пока нет вещей</div>`;
       return;
     }
+    const catOptions = ['Верх','Низ','Обувь','Верхняя одежда','Платья','Аксессуары','Сумки','Головные уборы','Без категории'];
     grid.innerHTML = filtered.map(item => `
       <div class="wardrobe-item" data-id="${item.id}">
         <img src="${item.url}" alt="${item.name}">
-        ${item.category
-          ? `<div class="item-cat-badge">${item.category}</div>`
-          : `<div class="analyzing-badge">анализ…</div>`}
+        <select class="item-cat-select" onchange="changeCategory('${item.id}', this.value)">
+          ${catOptions.map(c => `<option value="${c}" ${item.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+        </select>
         <button class="remove-btn" onclick="removeItem('${item.id}')">✕</button>
       </div>
     `).join('');
+  }
+
+  function changeCategory(id, newCat) {
+    const idx = wardrobe.findIndex(i => String(i.id) === String(id));
+    if (idx !== -1) {
+      wardrobe[idx].category = newCat;
+      saveWardrobe();
+      renderCategoryFilters();
+    }
   }
 
   function removeItem(id) {
