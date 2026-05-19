@@ -578,15 +578,38 @@
             contents: [{
               parts: [
                 { inline_data: { mime_type: mime, data: base64 } },
-                { text: `Определи категорию одежды или аксессуара на фото. Отвечай ТОЛЬКО одним словом из списка: Верх, Низ, Обувь, Верхняя одежда, Платья, Аксессуары, Сумки, Головные уборы. Ничего больше.` }
+                { text: `Посмотри на фото и определи к какой категории относится этот предмет одежды или аксессуар.
+
+Правила:
+- Футболки, рубашки, свитера, худи, топы, блузки → "Верх"
+- Джинсы, брюки, шорты, юбки, леггинсы → "Низ"  
+- Кроссовки, туфли, ботинки, сапоги, сандалии, тапочки → "Обувь"
+- Куртки, пальто, пуховики, плащи, ветровки → "Верхняя одежда"
+- Платья, сарафаны, комбинезоны → "Платья"
+- Сумки, рюкзаки, клатчи → "Сумки"
+- Шапки, кепки, панамы, береты → "Головные уборы"
+- Часы, ремни, украшения, шарфы, перчатки, очки → "Аксессуары"
+
+Ответь ТОЛЬКО одним из этих слов: Верх, Низ, Обувь, Верхняя одежда, Платья, Сумки, Головные уборы, Аксессуары` }
               ]
             }]
           })
         }
       );
       const data = await res.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-      return CATEGORIES.includes(text) ? text : 'Аксессуары';
+      const raw = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+      // Try exact match first
+      if (CATEGORIES.includes(raw)) return raw;
+      // Fuzzy match
+      const lower = raw.toLowerCase();
+      if (lower.includes('верх') || lower.includes('футбол') || lower.includes('рубаш') || lower.includes('свитер') || lower.includes('худи') || lower.includes('топ')) return 'Верх';
+      if (lower.includes('низ') || lower.includes('джинс') || lower.includes('брюк') || lower.includes('шорт') || lower.includes('юбк')) return 'Низ';
+      if (lower.includes('обув') || lower.includes('кроссов') || lower.includes('туфл') || lower.includes('ботин') || lower.includes('сапог')) return 'Обувь';
+      if (lower.includes('куртк') || lower.includes('пальто') || lower.includes('пуховик') || lower.includes('верхн')) return 'Верхняя одежда';
+      if (lower.includes('плать') || lower.includes('сарафан') || lower.includes('комбинез')) return 'Платья';
+      if (lower.includes('сумк') || lower.includes('рюкзак')) return 'Сумки';
+      if (lower.includes('шапк') || lower.includes('кепк') || lower.includes('голов')) return 'Головные уборы';
+      return 'Аксессуары';
     } catch(e) { return 'Аксессуары'; }
   }
 
