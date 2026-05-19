@@ -774,13 +774,13 @@ wardrobeIndex должен быть числом от 0 до ${wardrobe.length -
       });
 
       const data = await response.json();
+      console.log('Cohere response:', JSON.stringify(data));
 
       // Handle API errors
-      if (data.message) throw new Error(data.message);
-      if (!data.message && data.status && data.status !== 200) throw new Error(JSON.stringify(data));
+      if (data.message && typeof data.message === 'string' && !data.message.content) throw new Error(data.message);
 
       // Extract text from v2 response format
-      const text = data.message?.content?.[0]?.text || data.text || '';
+      const text = data.message?.content?.[0]?.text || '';
       if (!text) throw new Error('Пустой ответ от сервера');
 
       // Clean and parse JSON
