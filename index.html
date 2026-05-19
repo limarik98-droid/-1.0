@@ -303,7 +303,16 @@
 
 <script>
   const CHIPS = ["вечер в ресторане","деловая встреча","прогулка в городе","свидание","выходной день","вечеринка"];
-  let wardrobe = []; // { id, url, name }
+  // Load wardrobe from localStorage
+  let wardrobe = [];
+  try {
+    const saved = localStorage.getItem('wardrobe');
+    if (saved) wardrobe = JSON.parse(saved);
+  } catch(e) { wardrobe = []; }
+
+  function saveWardrobe() {
+    try { localStorage.setItem('wardrobe', JSON.stringify(wardrobe)); } catch(e) {} 
+  }
 
   // Chips
   const chipsEl = document.getElementById('chips');
@@ -334,6 +343,7 @@
       const reader = new FileReader();
       reader.onload = e => {
         wardrobe.push({ id: Date.now() + Math.random(), url: e.target.result, name: file.name.replace(/\.[^.]+$/, '') });
+        saveWardrobe();
         renderWardrobe();
         updateBtn();
       };
@@ -362,6 +372,7 @@
 
   function removeItem(id) {
     wardrobe = wardrobe.filter(i => String(i.id) !== String(id));
+    saveWardrobe();
     renderWardrobe();
     updateBtn();
   }
