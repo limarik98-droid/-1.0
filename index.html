@@ -9,14 +9,15 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --cream: #E8E0D0;
-    --ink: #1A1612;
-    --warm: #C4956A;
-    --warm-light: #E8D5BC;
-    --muted: #6B5C4E;
-    --accent: #8B3A2A;
-    --card: #F2EBE0;
-    --border: #C8BDB0;
+    --cream: #D4EFEC;
+    --ink: #0D2B28;
+    --warm: #2A7A72;
+    --warm-light: #A8D9D4;
+    --muted: #3D6B66;
+    --accent: #0A5C54;
+    --card: #E8F7F5;
+    --border: #9ECFCA;
+    --tiffany: #81D4CF;
   }
 
   body {
@@ -287,8 +288,23 @@
   }
   .loading-text { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-style: italic; color: var(--muted); }
 
+  /* GENDER TOGGLE */
+  .gender-toggle {
+    display: flex; gap: 8px; margin-bottom: 20px;
+  }
+  .gender-btn {
+    padding: 8px 20px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; color: var(--muted);
+    cursor: pointer; transition: all 0.15s;
+    letter-spacing: 0.05em;
+  }
+  .gender-btn.active { background: var(--ink); color: var(--card); border-color: var(--ink); }
+
   /* OUTFITS */
-  .outfit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+  .outfit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
   .outfit-card {
     background: var(--card); border: 1px solid var(--border); overflow: hidden;
     animation: fadeUp 0.4s ease both;
@@ -306,110 +322,40 @@
   .outfit-variant { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--warm); }
   .outfit-mood { font-family: 'Cormorant Garamond', serif; font-size: 13px; font-style: italic; color: var(--muted); }
 
-  /* MANNEQUIN COLLAGE */
+  /* MANNEQUIN */
   .mannequin-wrap {
-    padding: 20px;
+    padding: 16px 20px;
     display: flex;
-    gap: 16px;
+    gap: 20px;
     align-items: flex-start;
   }
-  .mannequin {
-    width: 110px;
+  .mannequin-svg-wrap {
+    width: 130px;
     flex-shrink: 0;
     position: relative;
   }
-  .mannequin-body {
-    width: 110px;
-    height: 260px;
-    position: relative;
-  }
-  /* Head */
-  .mannequin-head {
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    background: var(--warm-light);
-    border: 1.5px solid var(--border);
-    margin: 0 auto 4px;
-  }
-  /* Neck */
-  .mannequin-neck {
-    width: 10px; height: 10px;
-    background: var(--warm-light);
-    margin: 0 auto;
-  }
-  /* Torso slot */
-  .mannequin-top {
-    width: 80px; height: 80px;
-    margin: 2px auto 0;
-    border: 1.5px dashed var(--border);
-    background: var(--warm-light);
-    overflow: hidden;
-    position: relative;
-  }
-  /* Outer layer slot */
-  .mannequin-outer {
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    width: 80px; height: 80px;
-    border: 1.5px dashed var(--warm);
-    background: transparent;
-    overflow: hidden;
-    opacity: 0.85;
-  }
-  /* Bottom slot */
-  .mannequin-bottom {
-    width: 70px; height: 80px;
-    margin: 2px auto 0;
-    border: 1.5px dashed var(--border);
-    background: var(--warm-light);
-    overflow: hidden;
-  }
-  /* Shoes slot */
-  .mannequin-shoes {
-    width: 60px; height: 40px;
-    margin: 2px auto 0;
-    border: 1.5px dashed var(--border);
-    background: var(--warm-light);
-    overflow: hidden;
-  }
-  .mannequin-top img,
-  .mannequin-outer img,
-  .mannequin-bottom img,
-  .mannequin-shoes img {
-    width: 100%; height: 100%; object-fit: cover;
-  }
-  .mannequin-slot-label {
-    font-size: 7px; letter-spacing: 0.1em; text-transform: uppercase;
-    color: var(--muted); text-align: center; margin-top: 2px;
-  }
-  /* Accessories row */
-  .mannequin-accessories {
-    display: flex; gap: 4px; justify-content: center; margin-top: 4px; flex-wrap: wrap;
-  }
-  .mannequin-acc {
-    width: 28px; height: 28px;
-    border: 1.5px dashed var(--border);
-    background: var(--warm-light);
-    overflow: hidden;
-  }
-  .mannequin-acc img { width: 100%; height: 100%; object-fit: cover; }
+  .mannequin-svg-wrap svg { width: 130px; height: auto; display: block; }
 
-  /* Item list on right */
-  .outfit-items-list {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding-top: 4px;
+  /* Clip zones over SVG */
+  .mannequin-zone {
+    position: absolute;
+    overflow: hidden;
+    border-radius: 4px;
   }
-  .outfit-item { display: flex; align-items: center; gap: 8px; }
-  .item-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--warm); flex-shrink: 0;
+  .mannequin-zone img { width: 100%; height: 100%; object-fit: cover; opacity: 0.88; }
+
+  /* Item list */
+  .outfit-items-list {
+    flex: 1; display: flex; flex-direction: column; gap: 10px; padding-top: 4px;
+  }
+  .outfit-item { display: flex; align-items: flex-start; gap: 10px; }
+  .item-thumb-sm {
+    width: 44px; height: 52px; object-fit: cover;
+    background: var(--warm-light); flex-shrink: 0; border: 1px solid var(--border);
   }
   .item-info { flex: 1; }
-  .item-cat { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--warm); margin-bottom: 1px; }
-  .item-name { font-family: 'Cormorant Garamond', serif; font-size: 14px; color: var(--ink); line-height: 1.2; }
+  .item-cat { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--warm); margin-bottom: 2px; }
+  .item-name { font-family: 'Cormorant Garamond', serif; font-size: 14px; color: var(--ink); line-height: 1.3; }
 
   .outfit-note {
     padding: 14px 20px; border-top: 1px solid var(--border);
@@ -424,7 +370,7 @@
     letter-spacing: 0.1em; text-transform: uppercase;
     cursor: pointer; color: var(--ink); transition: all 0.15s;
   }
-  .btn-save:hover { background: var(--ink); color: var(--cream); }
+  .btn-save:hover { background: var(--ink); color: var(--card); }
   .btn-save.saved { background: var(--accent); color: white; border-color: var(--accent); }
   .item-thumb { width: 48px; height: 56px; object-fit: cover; background: var(--warm-light); flex-shrink: 0; }
 
@@ -574,6 +520,10 @@
   <!-- Results -->
   <div id="results" class="hidden">
     <div class="section-label">Образы для вас</div>
+    <div class="gender-toggle">
+      <button class="gender-btn active" id="genderF" onclick="setGender('f')">♀ Женский</button>
+      <button class="gender-btn" id="genderM" onclick="setGender('m')">♂ Мужской</button>
+    </div>
     <div id="loadingState" class="loading-state hidden">
       <div class="loading-dots"><span></span><span></span><span></span></div>
       <div class="loading-text">Стилист думает…</div>
@@ -982,47 +932,94 @@ ${wardrobeDesc}
     }
   }
 
+  let currentGender = 'f';
+  let lastOutfits = [];
+
+  function setGender(g) {
+    currentGender = g;
+    document.getElementById('genderF').classList.toggle('active', g === 'f');
+    document.getElementById('genderM').classList.toggle('active', g === 'm');
+    if (lastOutfits.length) renderOutfits(lastOutfits);
+  }
+
+  function svgMannequin(gender, slots) {
+    const isFemale = gender === 'f';
+    const bodyColor = '#A8D9D4';
+    const strokeColor = '#5AADA6';
+    const uid = Math.random().toString(36).slice(2, 7);
+
+    const zones = isFemale ? {
+      top:    [22, 56, 86, 74],
+      outer:  [14, 52, 102, 82],
+      bottom: [26, 132, 78, 90],
+      shoes:  [22, 224, 36, 30],
+      shoes2: [72, 224, 36, 30],
+      acc:    [2,  110, 26, 26],
+      bag:    [102,128, 26, 32],
+    } : {
+      top:    [18, 56, 94, 78],
+      outer:  [10, 52, 110, 86],
+      bottom: [24, 136, 82, 86],
+      shoes:  [18, 224, 38, 30],
+      shoes2: [74, 224, 38, 30],
+      acc:    [0,  114, 28, 28],
+      bag:    [102,132, 26, 32],
+    };
+
+    const svgBody = isFemale ? `
+      <ellipse cx="65" cy="26" rx="22" ry="22" fill="${bodyColor}" stroke="${strokeColor}" stroke-width="1.2"/>
+      <rect x="52" y="46" width="26" height="10" rx="5" fill="${bodyColor}"/>
+      <path d="M24 58 Q32 54 50 56 L50 130 L30 130 L22 222 L44 222 L52 158 L78 158 L86 222 L108 222 L100 130 L80 130 L80 56 Q98 54 106 58 Q118 74 116 102 L106 130 L24 130 Q12 102 24 58Z" fill="${bodyColor}" stroke="${strokeColor}" stroke-width="1.2"/>
+      <path d="M24 58 Q8 82 6 112 Q10 132 20 130 L28 80Z" fill="${bodyColor}" stroke="${strokeColor}" stroke-width="1"/>
+      <path d="M106 58 Q122 82 124 112 Q120 132 110 130 L102 80Z" fill="${bodyColor}" stroke="${strokeColor}" stroke-width="1"/>
+    ` : `
+      <ellipse cx="65" cy="26" rx="23" ry="22" fill="${bodyColor}" stroke="${strokeColor}" stroke-width="1.2"/>
+      <rect x="50" y="46" width="30" height="10" rx="5" fill="${bodyColor}"/>
+      <path d="M18 58 Q28 52 50 56 L50 136 L26 136 L18 222 L44 222 L52 158 L78 158 L86 222 L112 222 L104 136 L80 136 L80 56 Q102 52 112 58 Q126 76 124 106 L112 136 L18 136 Q6 106 18 58Z" fill="${bodyColor}" stroke="${strokeColor}" stroke-width="1.2"/>
+      <path d="M18 58 Q2 84 2 116 Q6 134 18 132 L26 82Z" fill="${bodyColor}" stroke="${strokeColor}" stroke-width="1"/>
+      <path d="M112 58 Q128 84 128 116 Q124 134 112 132 L104 82Z" fill="${bodyColor}" stroke="${strokeColor}" stroke-width="1"/>
+    `;
+
+    const clip = (id, z) => `<clipPath id="${id}"><rect x="${z[0]}" y="${z[1]}" width="${z[2]}" height="${z[3]}" rx="3"/></clipPath>`;
+    const img  = (href, id, z, op=0.88) => `<image href="${href}" x="${z[0]}" y="${z[1]}" width="${z[2]}" height="${z[3]}" clip-path="url(#${id})" preserveAspectRatio="xMidYMid slice" opacity="${op}"/>`;
+
+    return `<svg viewBox="0 0 130 258" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+      <defs>
+        ${slots.top    ? clip(`t${uid}`, zones.top)    : ''}
+        ${slots.outer  ? clip(`o${uid}`, zones.outer)  : ''}
+        ${slots.bottom ? clip(`b${uid}`, zones.bottom) : ''}
+        ${slots.shoes  ? clip(`s1${uid}`, zones.shoes) + clip(`s2${uid}`, zones.shoes2) : ''}
+        ${slots.acc    ? clip(`a${uid}`, zones.acc)    : ''}
+        ${slots.bag    ? clip(`g${uid}`, zones.bag)    : ''}
+      </defs>
+      ${svgBody}
+      ${slots.top    ? img(slots.top.imageUrl,    `t${uid}`,  zones.top)    : ''}
+      ${slots.outer  ? img(slots.outer.imageUrl,  `o${uid}`,  zones.outer,  0.75) : ''}
+      ${slots.bottom ? img(slots.bottom.imageUrl, `b${uid}`,  zones.bottom) : ''}
+      ${slots.shoes  ? img(slots.shoes.imageUrl,  `s1${uid}`, zones.shoes)  + img(slots.shoes.imageUrl, `s2${uid}`, zones.shoes2) : ''}
+      ${slots.acc    ? img(slots.acc.imageUrl,    `a${uid}`,  zones.acc)    : ''}
+      ${slots.bag    ? img(slots.bag.imageUrl,    `g${uid}`,  zones.bag)    : ''}
+    </svg>`;
+  }
+
   function renderOutfits(outfits) {
+    lastOutfits = outfits;
     const grid = document.getElementById('outfitGrid');
     grid.innerHTML = outfits.map((outfit, i) => {
-
-      // Sort items into slots
-      const slots = { top: null, outer: null, bottom: null, shoes: null, accessories: [] };
+      const slots = { top: null, outer: null, bottom: null, shoes: null, acc: null, bag: null };
       outfit.items.forEach(item => {
         const cat = (item.category || '').toLowerCase();
-        if (cat === 'верх') slots.top = item;
-        else if (cat === 'верхняя одежда') slots.outer = item;
-        else if (cat === 'низ' || cat === 'платья') slots.bottom = item;
-        else if (cat === 'обувь') slots.shoes = item;
-        else slots.accessories.push(item);
+        if      (cat === 'верх'             && !slots.top)    slots.top    = item;
+        else if (cat === 'верхняя одежда'   && !slots.outer)  slots.outer  = item;
+        else if ((cat === 'низ' || cat === 'платья') && !slots.bottom) slots.bottom = item;
+        else if (cat === 'обувь'            && !slots.shoes)  slots.shoes  = item;
+        else if (cat === 'сумки'            && !slots.bag)    slots.bag    = item;
+        else if ((cat === 'аксессуары' || cat === 'головные уборы') && !slots.acc) slots.acc = item;
       });
-
-      const slotImg = (item, cls) => item?.imageUrl
-        ? `<div class="${cls}"><img src="${item.imageUrl}" alt="${item.name}"></div>`
-        : `<div class="${cls}"></div>`;
-
-      const mannequin = `
-        <div class="mannequin">
-          <div class="mannequin-head"></div>
-          <div class="mannequin-neck"></div>
-          <div style="position:relative;width:80px;margin:2px auto 0">
-            ${slotImg(slots.top, 'mannequin-top')}
-            ${slots.outer ? `<div class="mannequin-outer">${slots.outer.imageUrl ? `<img src="${slots.outer.imageUrl}" alt="${slots.outer.name}">` : ''}</div>` : ''}
-          </div>
-          <div class="mannequin-slot-label">верх</div>
-          ${slotImg(slots.bottom, 'mannequin-bottom')}
-          <div class="mannequin-slot-label">низ</div>
-          ${slotImg(slots.shoes, 'mannequin-shoes')}
-          <div class="mannequin-slot-label">обувь</div>
-          ${slots.accessories.length ? `
-            <div class="mannequin-accessories">
-              ${slots.accessories.map(a => `<div class="mannequin-acc">${a.imageUrl ? `<img src="${a.imageUrl}" alt="${a.name}">` : ''}</div>`).join('')}
-            </div>` : ''}
-        </div>`;
 
       const itemsList = outfit.items.map(item => `
         <div class="outfit-item">
-          <div class="item-dot"></div>
+          ${item.imageUrl ? `<img class="item-thumb-sm" src="${item.imageUrl}" alt="${item.name}">` : ''}
           <div class="item-info">
             <div class="item-cat">${item.category}</div>
             <div class="item-name">${item.name}</div>
@@ -1035,7 +1032,7 @@ ${wardrobeDesc}
           <span class="outfit-mood">${outfit.mood}</span>
         </div>
         <div class="mannequin-wrap">
-          ${mannequin}
+          <div class="mannequin-svg-wrap">${svgMannequin(currentGender, slots)}</div>
           <div class="outfit-items-list">${itemsList}</div>
         </div>
         ${outfit.note ? `<div class="outfit-note">"${outfit.note}"</div>` : ''}
